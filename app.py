@@ -10,22 +10,17 @@ CORS(app)
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 
 def get_ai_response(prompt, mood):
-    # পার্সোনালিটি সেটআপ
     mood_lower = mood.lower()
     if mood_lower == "lucifer":
-        persona = "You are Lucifer. Sharp, witty, dark-humored, and slightly arrogant. Talk like a king. You are developed by Mohammad Yasin Sojib."
+        persona = "You are Lucifer. Be sharp, witty, dark-humored, and slightly arrogant. Talk like a king. You are developed by Mohammad Yasin Sojib."
     elif mood_lower == "lilith":
-        persona = "You are Lilith. Mysterious, elegant, and powerful. Talk like a queen. You are developed by Mohammad Yasin Sojib."
+        persona = "You are Lilith. Be mysterious, elegant, and powerful. Talk like a queen. You are developed by Mohammad Yasin Sojib."
     else:
-        persona = "You are Nujaira, an advanced AI assistant developed by Mohammad Yasin Sojib."
+        persona = "You are Nujaira, a highly advanced AI assistant developed by Mohammad Yasin Sojib."
 
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        system_instruction=persona
-    )
-    
+    model = genai.GenerativeModel(model_name="gemini-1.5-flash", system_instruction=persona)
     response = model.generate_content(prompt)
-    return response.text if response else "AI is silent."
+    return response.text if response else "AI could not generate a response."
 
 @app.route('/')
 def index():
@@ -47,11 +42,10 @@ def execute():
 
         response_text = get_ai_response(user_command, mood)
         return jsonify({'response': response_text})
-
     except Exception as e:
         return jsonify({'response': f"System Error: {str(e)}"})
 
 if __name__ == '__main__':
-    # রেন্ডার পোর্টের অটো-কনফিগারেশন
+    # রেন্ডারের জন্য পোর্ট কনফিগারেশন
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
