@@ -10,13 +10,14 @@ CORS(app)
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 
 def get_ai_response(prompt, mood):
-    # মুড অনুযায়ী সিস্টেম ইন্সট্রাকশন
-    if mood.lower() == "lucifer":
-        persona = "You are Lucifer. Be sharp, witty, dark-humored, and slightly arrogant. Talk like a king. You are developed by Sami."
-    elif mood.lower() == "lilith":
-        persona = "You are Lilith. Be mysterious, elegant, and powerful. Talk like a queen. You are developed by Sami."
+    # পার্সোনালিটি সেটআপ
+    mood_lower = mood.lower()
+    if mood_lower == "lucifer":
+        persona = "You are Lucifer. Sharp, witty, dark-humored, and slightly arrogant. Talk like a king. You are developed by Mohammad Yasin Sojib."
+    elif mood_lower == "lilith":
+        persona = "You are Lilith. Mysterious, elegant, and powerful. Talk like a queen. You are developed by Mohammad Yasin Sojib."
     else:
-        persona = "You are Nujaira, an advanced AI assistant developed by Sami."
+        persona = "You are Nujaira, an advanced AI assistant developed by Mohammad Yasin Sojib."
 
     model = genai.GenerativeModel(
         model_name="gemini-1.5-flash",
@@ -24,7 +25,7 @@ def get_ai_response(prompt, mood):
     )
     
     response = model.generate_content(prompt)
-    return response.text
+    return response.text if response else "AI is silent."
 
 @app.route('/')
 def index():
@@ -32,21 +33,25 @@ def index():
 
 @app.route('/api/chat', methods=['POST'])
 def execute():
-    data = request.json
-    # এক লাইনে কমান্ডটি হ্যান্ডেল করা হলো যাতে কোনো সিনট্যাক্স এরর না হয়
-    user_command = data.get('command', '').strip()
-    mood = data.get('mood', 'Lucifer')
-    
-    if not user_command:
-        return jsonify({'response': "Master, please type something first!"})
-    
     try:
+        # ফ্রন্টএন্ড থেকে আসা ডাটা রিসিভ করা (JSON বা Form যাই হোক)
+        data = request.get_json(silent=True) or request.form.to_dict()
+        
+        # 'command' বা 'text' বা 'message' যে নামেই আসুক, ডাটা খুঁজে নিবে
+        user_command = data.get('command') or data.get('text') or data.get('message') or ""
+        user_command = str(user_command).strip()
+        mood = data.get('mood', 'Lucifer')
+        
+        if not user_command:
+            return jsonify({'response': "Master, please type something first!"})
+
         response_text = get_ai_response(user_command, mood)
         return jsonify({'response': response_text})
+
     except Exception as e:
         return jsonify({'response': f"System Error: {str(e)}"})
 
 if __name__ == '__main__':
-    # রেন্ডারের জন্য ডাইনামিক পোর্ট সেটআপ
-    app_port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=app_port)
+    # রেন্ডার পোর্টের অটো-কনফিগারেশন
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
