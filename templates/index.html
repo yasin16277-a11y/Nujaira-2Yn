@@ -3,23 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>Nujaira-2 AI Assistant</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; }
-        .container { max-width: 800px; margin: 20px auto; padding: 20px; background:#fff; border-radius: 10px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
-        #chat-box { height: 400px; overflow-y: auto; border:1px solid #ddd; padding:10px; border-radius:5px; background:#fafafa; margin-bottom:10px;}
-        .user-msg { text-align: right; color: #000; margin: 5px 0;}
-        .ai-msg { text-align: left; color: #007BFF; margin: 5px 0;}
-        select, input, button { padding:10px; margin:5px 0; border-radius:5px; border:1px solid #ccc; }
-    </style>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h2>Nujaira-2 AI Assistant</h2>
+        <h1>Nujaira-2 AI Assistant</h1>
 
-        <!-- Mood / Persona Selection -->
-        <label for="mood">Select Mood / Persona:</label>
-        <select id="mood">
+        <!-- Persona selection -->
+        <label for="mood-select">Select Persona:</label>
+        <select id="mood-select">
             <option value="default">Default</option>
             <option value="lucifer">Lucifer</option>
             <option value="lilith">Lilith</option>
@@ -29,58 +22,85 @@
             <option value="mom">Mom</option>
         </select>
 
-        <!-- Chat Box -->
-        <div id="chat-box"></div>
+        <!-- Chat messages -->
+        <div id="chat-window"></div>
 
-        <!-- User Input -->
-        <input type="text" id="user-input" placeholder="Type your message here..." />
+        <!-- User input -->
+        <input type="text" id="user-input" placeholder="Type your command here...">
         <button id="send-btn">Send</button>
-        <button id="voice-btn">🎤 Voice Input (Placeholder)</button>
+        <button id="voice-btn">🎤 Voice</button>
+
+        <!-- Screen streaming -->
+        <h3>Screen Stream:</h3>
+        <canvas id="screen-canvas" width="640" height="360"></canvas>
     </div>
 
     <script>
-        const chatBox = document.getElementById('chat-box');
-        const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const moodSelect = document.getElementById('mood');
-        const voiceBtn = document.getElementById('voice-btn');
-
-        function appendMessage(message, sender='ai') {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = sender === 'ai' ? 'ai-msg' : 'user-msg';
-            msgDiv.innerText = message;
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
+        // ==============================
+        // Chat Functionality
+        // ==============================
+        function addMessage(sender, text) {
+            $("#chat-window").append(`<p><strong>${sender}:</strong> ${text}</p>`);
+            $("#chat-window").scrollTop($("#chat-window")[0].scrollHeight);
         }
 
-        async function sendMessage() {
-            const text = userInput.value.trim();
-            const mood = moodSelect.value;
-            if(!text) return;
+        $("#send-btn").click(async function() {
+            let userInput = $("#user-input").val();
+            if (!userInput) return;
+            let mood = $("#mood-select").val();
+            addMessage("You", userInput);
+            $("#user-input").val("");
 
-            appendMessage(text, 'user');
-            userInput.value = '';
+            // Send to API
+            let response = await fetch("/api/chat", {
+                method: "POST",
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({command: userInput, mood: mood})
+            });
+            let data = await response.json();
+            addMessage("Nujaira-2", data.response);
+        });
 
-            try {
-                const response = await fetch('/api/chat', {
-                    method:'POST',
-                    headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({message:text, mood:mood})
-                });
-                const data = await response.json();
-                appendMessage(data.response, 'ai');
-            } catch (err) {
-                appendMessage("Error: Unable to get response", 'ai');
+        // ==============================
+        // Voice Input Functionality
+        // ==============================
+        let recognition;
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                let voiceText = event.results[0][0].transcript;
+                $("#user-input").val(voiceText);
+                $("#send-btn").click();
             }
         }
 
-        sendBtn.addEventListener('click', sendMessage);
-        userInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
-
-        voiceBtn.addEventListener('click', () => {
-            appendMessage("[Voice Input Placeholder activated]", 'user');
-            appendMessage("[AI will process voice input here]", 'ai');
+        $("#voice-btn").click(function() {
+            if(recognition) recognition.start();
         });
+
+        // ==============================
+        // Screen Stream Placeholder
+        // ==============================
+        const canvas = document.getElementById('screen-canvas');
+        const ctx = canvas.getContext('2d');
+
+        async function fetchScreen() {
+            try {
+                const response = await fetch('/api/screen');
+                const blob = await response.blob();
+                const img = new Image();
+                img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                img.src = URL.createObjectURL(blob);
+            } catch (e) {
+                console.log("Screen fetch error:", e);
+            }
+        }
+
+        setInterval(fetchScreen, 1000 / 15); // 15 FPS
     </script>
 </body>
 </html>
