@@ -1,34 +1,41 @@
-# screen_stream.py
+import cv2
+import numpy as np
+import pyautogui
+from threading import Thread
 
-# Placeholder imports for screen capture / streaming
-# Example: pyautogui, mss, OpenCV, ffmpeg, websockets
+# ===========================
+# Screen Stream Settings
+# ===========================
+SCREEN_STREAM_ENABLED = True
+FPS = 15
+RESOLUTION = (1280, 720)  # Width x Height
 
-def capture_screen_frame():
-    """
-    Placeholder for capturing current screen frame.
-    Replace with actual screen capture library.
-    """
-    # Example using pyautogui:
-    # import pyautogui
-    # screenshot = pyautogui.screenshot()
-    # return screenshot
-    return "[Screen Frame Placeholder]"
+class ScreenStreamer:
+    def __init__(self, fps=FPS, resolution=RESOLUTION):
+        self.fps = fps
+        self.resolution = resolution
+        self.running = False
+        self.frame = None
 
-def process_screen_context(frame, language='en'):
-    """
-    Placeholder for analyzing screen content.
-    Can be used to generate AI responses based on screen context.
-    """
-    # Example: OCR, image recognition, text extraction
-    # import pytesseract
-    # text = pytesseract.image_to_string(frame)
-    # return text
+    def start_stream(self):
+        """Start the screen capture in a separate thread"""
+        self.running = True
+        Thread(target=self._capture_loop, daemon=True).start()
 
-    return f"[Processed screen context placeholder in {language}]"
+    def stop_stream(self):
+        """Stop the screen capture"""
+        self.running = False
 
-def stream_screen_updates(session_id):
-    """
-    Placeholder for streaming screen updates to AI backend.
-    This can be integrated with WebSocket or live streaming.
-    """
-    return f"[Streaming screen updates placeholder for session {session_id}]"
+    def _capture_loop(self):
+        """Continuously capture the screen"""
+        while self.running:
+            screenshot = pyautogui.screenshot()
+            frame = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+            frame = cv2.resize(frame, self.resolution)
+            self.frame = frame
+            # Limit FPS
+            cv2.waitKey(int(1000 / self.fps))
+
+    def get_frame(self):
+        """Return the latest frame"""
+        return self.frame
