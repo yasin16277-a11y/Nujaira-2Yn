@@ -1,74 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Felicity | Nujaira-2 Interface</title>
-    <style>
-        body { background-color: #0d1117; color: #c9d1d9; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .container { width: 80%; max-width: 600px; background: #161b22; padding: 20px; border-radius: 8px; border: 1px solid #30363d; }
-        h1 { text-align: center; color: #58a6ff; }
-        select, input, button { width: 100%; padding: 10px; margin: 10px 0; background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; }
-        button { background-color: #238636; color: white; cursor: pointer; padding: 12px; font-weight:bold; }
-        #chat-log { height: 200px; overflow-y: auto; border: 1px solid #30363d; padding: 10px; margin-bottom: 10px; background: #0d1117; }
-        .user-msg { color: #8b949e; text-align: right; margin-bottom: 5px; }
-        .ai-msg { color: #58a6ff; text-align: left; margin-bottom: 5px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nujaira AI Console</title>
+<style>
+body {font-family: Arial,sans-serif; background:#f2f2f2; margin:0;}
+#chat-container {max-width:600px; margin:auto; padding:20px; background:white; height:90vh; overflow-y:auto; border-radius:8px;}
+#messages {list-style:none; padding:0;}
+#messages li {margin:10px 0;}
+.user-msg {text-align:right; color:blue;}
+.ai-msg {text-align:left; color:green;}
+#input-container {display:flex; margin-top:10px;}
+#user-input {flex:1; padding:10px; font-size:16px;}
+#send-btn {padding:10px 20px; font-size:16px; background:#4CAF50; color:white; border:none; cursor:pointer;}
+#send-btn:hover {background:#45a049;}
+#mood-select {margin-left:10px; padding:10px;}
+</style>
 </head>
 <body>
-<div class="container">
-    <h1>Nujaira-2 Terminal</h1>
-    <select id="persona-select">
-        <option value="default">System Default</option>
-        <option value="lucifer">Lucifer</option>
-        <option value="lilith">Lilith</option>
-        <option value="kamukta">Kamukta</option>
-        <option value="fantasy">Fantasy</option>
-        <option value="roleplay">Roleplay</option>
-        <option value="mom">Mom</option>
-    </select>
-    <div id="chat-log"></div>
-    <input type="text" id="user-input" placeholder="Command..." autocomplete="off">
-    <button onclick="sendCommand()">Execute</button>
+<div id="chat-container">
+    <ul id="messages"></ul>
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="Type your message..." />
+        <select id="mood-select">
+            <option value="Lucifer">Lucifer</option>
+            <option value="Lilith">Lilith</option>
+            <option value="Nujaira">Nujaira</option>
+        </select>
+        <button id="send-btn">Send</button>
+    </div>
 </div>
 <script>
-    const chatLog = document.getElementById('chat-log');
-    function appendMessage(sender, text, className) {
-        chatLog.innerHTML += `<div class="${className}"><strong>${sender}:</strong> ${text}</div>`;
-        chatLog.scrollTop = chatLog.scrollHeight;
-    }
-    
-    function speakText(text) {
-        const synth = window.speechSynthesis;
-        const utterance = new SpeechSynthesisUtterance(text);
-        const currentMood = document.getElementById('persona-select').value;
-        if (currentMood === 'lucifer' || currentMood === 'lilith') {
-            utterance.pitch = 0.8; utterance.rate = 0.9;
-        } else {
-            utterance.pitch = 1.2; utterance.rate = 1.0;
-        }
-        synth.speak(utterance);
-    }
+const messages = document.getElementById("messages");
+const userInput = document.getElementById("user-input");
+const sendBtn = document.getElementById("send-btn");
+const moodSelect = document.getElementById("mood-select");
 
-    async function sendCommand() {
-        const input = document.getElementById('user-input');
-        const msg = input.value.trim();
-        const mood = document.getElementById('persona-select').value;
-        if (!msg) return;
-        appendMessage("You", msg, "user-msg");
-        input.value = '';
-        try {
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: msg, mood: mood })
-            });
-            const data = await res.json();
-            const reply = data.response || data.error;
-            appendMessage("Nujaira-2", reply, "ai-msg");
-            speakText(reply);
-        } catch (e) { appendMessage("Error", "Connection failed.", "ai-msg"); }
+let userId = localStorage.getItem("nujaira_user_id") || "";
+
+function appendMessage(text, cls){
+    const li=document.createElement("li");
+    li.textContent=text;
+    li.className=cls;
+    messages.appendChild(li);
+    messages.scrollTop=messages.scrollHeight;
+}
+
+async function sendMessage(){
+    const text=userInput.value.trim();
+    const mood=moodSelect.value;
+    if(!text) return;
+    appendMessage("You: "+text,"user-msg");
+    userInput.value="";
+    const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:text,mood:mood,user_id:userId})});
+    const data=await res.json();
+    appendMessage("AI: "+data.response,"ai-msg");
+    if(data.user_id){
+        userId=data.user_id;
+        localStorage.setItem("nujaira_user_id",userId);
     }
+}
+
+sendBtn.addEventListener("click",sendMessage);
+userInput.addEventListener("keypress",e=>{if(e.key==="Enter") sendMessage();});
 </script>
 </body>
 </html>
