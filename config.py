@@ -1,31 +1,40 @@
-# config.py
-
 import os
 
-# ==========================
-# API Keys
-# ==========================
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "your_openai_api_key_here")
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "your_google_api_key_here")
+# ===========================
+# API KEYS / CONFIGURATION
+# ===========================
 
-# ==========================
-# App Settings
-# ==========================
-APP_PORT = int(os.environ.get("PORT", 10000))
-DEBUG_MODE = True
+# OpenAI API Key
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "your-openai-api-key-here")
 
-# Default session memory limit (number of entries per session)
-SESSION_MEMORY_LIMIT = 50
+# Voice Module Settings (placeholder)
+VOICE_ENABLED = True            # Enable voice recognition
+VOICE_LANGUAGE = "auto"         # Auto-detect user language (bn, hi, en)
 
-# Supported languages for TTS / voice
-SUPPORTED_LANGUAGES = ['en', 'bn', 'hi']
+# Screen Streaming / Capture Settings
+SCREEN_STREAM_ENABLED = True    # Enable screen capture/streaming
+SCREEN_STREAM_FPS = 15          # Frames per second
+SCREEN_STREAM_RESOLUTION = (1280, 720)  # Width x Height
 
-# Enable / Disable optional modules
-ENABLE_VOICE_MODULE = True
-ENABLE_SCREEN_STREAM = True
+# Session Memory Settings
+SESSION_MEMORY_ENABLED = True   # In-memory temporary memory
+SESSION_MEMORY_MAX_ENTRIES = 100  # Max messages stored per user
 
-# ==========================
-# Future placeholders for cloud storage, logging, etc.
-# ==========================
-CLOUD_BACKUP_ENABLED = False
-LOGGING_ENABLED = True
+# Logging / Debug
+DEBUG_MODE = False
+LOG_FILE = "nujaira2_logs.txt"
+
+# Feature Toggles
+ROLEPLAY_MODE_ENABLED = True
+FANTASY_MODE_ENABLED = True
+PERSONA_MODES = ["default", "lucifer", "lilith", "kamukta", "fantasy", "roleplay", "mom"]
+
+# Misc
+PORT = int(os.environ.get("PORT", 10000))
+HOST = '0.0.0.0'
+
+# ===========================
+# Ensure keys are present
+# ===========================
+if not OPENAI_API_KEY or OPENAI_API_KEY == "your-openai-api-key-here":
+    raise ValueError("OpenAI API Key is not set! Please set the environment variable 'OPENAI_API_KEY'.")
