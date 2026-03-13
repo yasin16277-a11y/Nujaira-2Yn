@@ -16,6 +16,8 @@ PERSONA_PROMPTS = {
 # ===========================
 # Function to get system prompt based on mood
 # ===========================
+
+
 def get_system_prompt(mood_name):
     """
     Return the system prompt string based on the mood/persona.

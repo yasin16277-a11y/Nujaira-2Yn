@@ -19,11 +19,11 @@ class MemoryManager:
         """
         if session_id not in self.sessions:
             self.sessions[session_id] = []
-        
+
         self.sessions[session_id].append(f"User: {user_input}")
         self.sessions[session_id].append(f"AI: {ai_response}")
 
-        # Optional: limit memory size to avoid excessive growth
+        # Limit memory size to avoid excessive growth
         max_len = 50  # keep last 50 entries
         if len(self.sessions[session_id]) > max_len:
             self.sessions[session_id] = self.sessions[session_id][-max_len:]

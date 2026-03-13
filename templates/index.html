@@ -2,105 +2,403 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Nujaira-2 AI Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nujaira-2 &mdash; AI Companion</title>
     <link rel="stylesheet" href="/static/styles.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Nujaira-2 AI Assistant</h1>
 
-        <!-- Persona selection -->
-        <label for="mood-select">Select Persona:</label>
-        <select id="mood-select">
-            <option value="default">Default</option>
-            <option value="lucifer">Lucifer</option>
-            <option value="lilith">Lilith</option>
-            <option value="kamukta">Kamukta</option>
-            <option value="fantasy">Fantasy</option>
-            <option value="roleplay">Roleplay</option>
-            <option value="mom">Mom</option>
-        </select>
+    <!-- ============================== Header ============================== -->
+    <header class="header">
+        <div class="header-brand">
+            <div class="header-logo">N2</div>
+            <div class="header-title">Nujaira<span>-2</span></div>
+        </div>
+        <div class="header-actions">
+            <button class="header-btn" id="clear-btn" title="Clear conversation">
+                &#x1F5D1; Clear
+            </button>
+            <button class="header-btn" id="screen-toggle-btn" title="Toggle screen stream">
+                &#x1F4F7; Screen
+            </button>
+        </div>
+    </header>
 
-        <!-- Chat messages -->
-        <div id="chat-window"></div>
+    <!-- ============================== Main Layout ============================== -->
+    <div class="app-container">
 
-        <!-- User input -->
-        <input type="text" id="user-input" placeholder="Type your command here...">
-        <button id="send-btn">Send</button>
-        <button id="voice-btn">🎤 Voice</button>
+        <!-- Sidebar: Persona Selection -->
+        <aside class="sidebar">
+            <div class="sidebar-section-title">Persona</div>
+            <div class="persona-grid" id="persona-grid">
+                <button class="persona-btn active persona-default" data-persona="default">
+                    <div class="persona-icon">&#x1F916;</div>
+                    <div class="persona-info">
+                        <div class="persona-name">Default</div>
+                        <div class="persona-desc">Professional assistant</div>
+                    </div>
+                </button>
+                <button class="persona-btn persona-lucifer" data-persona="lucifer">
+                    <div class="persona-icon">&#x1F525;</div>
+                    <div class="persona-info">
+                        <div class="persona-name">Lucifer</div>
+                        <div class="persona-desc">Dark & witty</div>
+                    </div>
+                </button>
+                <button class="persona-btn persona-lilith" data-persona="lilith">
+                    <div class="persona-icon">&#x1F31F;</div>
+                    <div class="persona-info">
+                        <div class="persona-name">Lilith</div>
+                        <div class="persona-desc">Bold & mysterious</div>
+                    </div>
+                </button>
+                <button class="persona-btn persona-kamukta" data-persona="kamukta">
+                    <div class="persona-icon">&#x1F497;</div>
+                    <div class="persona-info">
+                        <div class="persona-name">Kamukta</div>
+                        <div class="persona-desc">Romantic & deep</div>
+                    </div>
+                </button>
+                <button class="persona-btn persona-fantasy" data-persona="fantasy">
+                    <div class="persona-icon">&#x2728;</div>
+                    <div class="persona-info">
+                        <div class="persona-name">Fantasy</div>
+                        <div class="persona-desc">Imaginative worlds</div>
+                    </div>
+                </button>
+                <button class="persona-btn persona-roleplay" data-persona="roleplay">
+                    <div class="persona-icon">&#x1F3AD;</div>
+                    <div class="persona-info">
+                        <div class="persona-name">Roleplay</div>
+                        <div class="persona-desc">Adaptive character</div>
+                    </div>
+                </button>
+                <button class="persona-btn persona-mom" data-persona="mom">
+                    <div class="persona-icon">&#x1F49B;</div>
+                    <div class="persona-info">
+                        <div class="persona-name">Mom</div>
+                        <div class="persona-desc">Caring & warm</div>
+                    </div>
+                </button>
+            </div>
 
-        <!-- Screen streaming -->
-        <h3>Screen Stream:</h3>
-        <canvas id="screen-canvas" width="640" height="360"></canvas>
+            <hr class="sidebar-divider">
+
+            <div class="sidebar-info">
+                <p>
+                    <span class="info-highlight">Nujaira-2</span> is your professional AI companion powered by Google Gemini.
+                    Select a persona to change the conversation style.
+                </p>
+            </div>
+        </aside>
+
+        <!-- Chat Area -->
+        <main class="chat-area">
+
+            <!-- Welcome Screen (shown when no messages) -->
+            <div id="welcome-screen" class="welcome-screen">
+                <div class="welcome-icon">N2</div>
+                <h2>Welcome to Nujaira-2</h2>
+                <p>Your highly professional AI companion. Ask me anything, switch personas, or start a creative conversation.</p>
+                <div class="welcome-suggestions">
+                    <div class="suggestion-chip" data-suggestion="Tell me about yourself">Tell me about yourself</div>
+                    <div class="suggestion-chip" data-suggestion="Help me write a story">Help me write a story</div>
+                    <div class="suggestion-chip" data-suggestion="Explain quantum computing">Explain quantum computing</div>
+                    <div class="suggestion-chip" data-suggestion="What can you do?">What can you do?</div>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="chat-window" class="hidden"></div>
+
+            <!-- Screen Stream Panel -->
+            <div id="screen-panel" class="screen-panel">
+                <canvas id="screen-canvas" width="1280" height="720"></canvas>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <textarea id="user-input" placeholder="Type a message..." rows="1"></textarea>
+                    <div class="input-actions">
+                        <button class="input-btn" id="voice-btn" title="Voice input">&#x1F3A4;</button>
+                        <button id="send-btn" title="Send message">&#x27A4;</button>
+                    </div>
+                </div>
+                <div class="input-hint">
+                    Press <strong>Enter</strong> to send &middot; <strong>Shift+Enter</strong> for new line
+                </div>
+            </div>
+        </main>
     </div>
 
+    <!-- ============================== Scripts ============================== -->
     <script>
         // ==============================
-        // Chat Functionality
+        // State
         // ==============================
-        function addMessage(sender, text) {
-            $("#chat-window").append(`<p><strong>${sender}:</strong> ${text}</p>`);
-            $("#chat-window").scrollTop($("#chat-window")[0].scrollHeight);
+        let currentMood = 'default';
+        let isProcessing = false;
+
+        const chatWindow = document.getElementById('chat-window');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        // ==============================
+        // Utility: Format time
+        // ==============================
+        function formatTime() {
+            const now = new Date();
+            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
-        $("#send-btn").click(async function() {
-            let userInput = $("#user-input").val();
-            if (!userInput) return;
-            let mood = $("#mood-select").val();
-            addMessage("You", userInput);
-            $("#user-input").val("");
+        // ==============================
+        // Utility: Simple markdown rendering
+        // ==============================
+        const MAX_INPUT_LENGTH = 5000;
 
-            // Send to API
-            let response = await fetch("/api/chat", {
-                method: "POST",
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({command: userInput, mood: mood})
-            });
-            let data = await response.json();
-            addMessage("Nujaira-2", data.response);
+        function renderMarkdown(text) {
+            let html;
+            if (typeof marked !== 'undefined') {
+                html = marked.parse(text);
+            } else {
+                html = text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`([^`]+)`/g, '<code>$1</code>')
+                    .replace(/\n/g, '<br>');
+            }
+            if (typeof DOMPurify !== 'undefined') {
+                return DOMPurify.sanitize(html, {
+                    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'code', 'pre', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'a', 'span', 'div', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr'],
+                    ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+                    ALLOW_DATA_ATTR: false,
+                });
+            }
+            return html;
+        }
+
+        // ==============================
+        // Add message to chat
+        // ==============================
+        function addMessage(type, text) {
+            welcomeScreen.classList.add('hidden');
+            chatWindow.classList.remove('hidden');
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+
+            const avatarText = type === 'user' ? '&#x1F464;' : '&#x1F916;';
+            const renderedText = type === 'ai' ? renderMarkdown(text) : text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+            const timeStr = formatTime();
+
+            msgDiv.innerHTML = `
+                <div class="message-avatar">${avatarText}</div>
+                <div class="message-content">
+                    <div class="message-bubble">${renderedText}</div>
+                    <div class="message-time">${timeStr}</div>
+                </div>
+            `;
+
+            chatWindow.appendChild(msgDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        // ==============================
+        // Show/hide typing indicator
+        // ==============================
+        function showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.id = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="message-avatar">&#x1F916;</div>
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            `;
+            chatWindow.appendChild(typingDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function hideTyping() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        // ==============================
+        // Send message
+        // ==============================
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text || isProcessing) return;
+
+            if (text.length > MAX_INPUT_LENGTH) {
+                addMessage('ai', `Message too long. Please keep messages under ${MAX_INPUT_LENGTH} characters.`);
+                return;
+            }
+
+            isProcessing = true;
+            sendBtn.disabled = true;
+            addMessage('user', text);
+            userInput.value = '';
+            userInput.style.height = 'auto';
+
+            showTyping();
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: text, mood: currentMood })
+                });
+                if (response.status === 429) {
+                    hideTyping();
+                    addMessage('ai', 'You are sending messages too quickly. Please wait a moment.');
+                    isProcessing = false;
+                    sendBtn.disabled = false;
+                    return;
+                }
+                const data = await response.json();
+                hideTyping();
+                addMessage('ai', data.response);
+            } catch (error) {
+                hideTyping();
+                addMessage('ai', 'Connection error. Please try again.');
+            }
+
+            isProcessing = false;
+            sendBtn.disabled = false;
+            userInput.focus();
+        }
+
+        // ==============================
+        // Event Listeners
+        // ==============================
+        sendBtn.addEventListener('click', sendMessage);
+
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
         });
 
+        // Auto-resize textarea
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // Persona selection
+        document.querySelectorAll('.persona-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.persona-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentMood = this.dataset.persona;
+            });
+        });
+
+        // Suggestion chips
+        document.querySelectorAll('.suggestion-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                userInput.value = this.dataset.suggestion;
+                sendMessage();
+            });
+        });
+
+        // Clear conversation
+        document.getElementById('clear-btn').addEventListener('click', async function() {
+            chatWindow.innerHTML = '';
+            chatWindow.classList.add('hidden');
+            welcomeScreen.classList.remove('hidden');
+            try {
+                await fetch('/api/clear', { method: 'POST' });
+            } catch (e) {
+                console.error('Failed to clear server memory:', e);
+            }
+        });
+
+        // Screen stream toggle
+        let screenActive = false;
+        const screenPanel = document.getElementById('screen-panel');
+        const screenCanvas = document.getElementById('screen-canvas');
+        const screenCtx = screenCanvas.getContext('2d');
+        let screenInterval = null;
+
+        document.getElementById('screen-toggle-btn').addEventListener('click', function() {
+            screenActive = !screenActive;
+            this.classList.toggle('active', screenActive);
+            screenPanel.classList.toggle('visible', screenActive);
+
+            if (screenActive) {
+                screenInterval = setInterval(fetchScreen, 1000 / 15);
+            } else {
+                clearInterval(screenInterval);
+                screenInterval = null;
+            }
+        });
+
+        async function fetchScreen() {
+            try {
+                const response = await fetch('/api/screen');
+                if (response.status === 204 || response.status === 503) return;
+                const blob = await response.blob();
+                const img = new Image();
+                img.onload = () => screenCtx.drawImage(img, 0, 0, screenCanvas.width, screenCanvas.height);
+                img.src = URL.createObjectURL(blob);
+            } catch (e) {
+                console.log('Screen fetch error:', e);
+            }
+        }
+
         // ==============================
-        // Voice Input Functionality
+        // Voice Input (Web Speech API)
         // ==============================
-        let recognition;
-        if ('webkitSpeechRecognition' in window) {
-            recognition = new webkitSpeechRecognition();
+        let recognition = null;
+        const voiceBtn = document.getElementById('voice-btn');
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
             recognition.continuous = false;
             recognition.interimResults = false;
             recognition.lang = 'en-US';
 
             recognition.onresult = function(event) {
-                let voiceText = event.results[0][0].transcript;
-                $("#user-input").val(voiceText);
-                $("#send-btn").click();
-            }
+                const voiceText = event.results[0][0].transcript;
+                userInput.value = voiceText;
+                sendMessage();
+            };
+
+            recognition.onstart = function() {
+                voiceBtn.classList.add('active');
+            };
+
+            recognition.onend = function() {
+                voiceBtn.classList.remove('active');
+            };
+
+            recognition.onerror = function() {
+                voiceBtn.classList.remove('active');
+            };
         }
 
-        $("#voice-btn").click(function() {
-            if(recognition) recognition.start();
+        voiceBtn.addEventListener('click', function() {
+            if (recognition) {
+                recognition.start();
+            } else {
+                alert('Voice input is not supported in this browser.');
+            }
         });
 
-        // ==============================
-        // Screen Stream Placeholder
-        // ==============================
-        const canvas = document.getElementById('screen-canvas');
-        const ctx = canvas.getContext('2d');
-
-        async function fetchScreen() {
-            try {
-                const response = await fetch('/api/screen');
-                const blob = await response.blob();
-                const img = new Image();
-                img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                img.src = URL.createObjectURL(blob);
-            } catch (e) {
-                console.log("Screen fetch error:", e);
-            }
-        }
-
-        setInterval(fetchScreen, 1000 / 15); // 15 FPS
+        // Focus input on load
+        userInput.focus();
     </script>
 </body>
 </html>

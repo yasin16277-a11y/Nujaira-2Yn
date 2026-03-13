@@ -5,14 +5,15 @@ from langdetect import detect
 # Voice Module Settings
 # ===========================
 
+
 def process_voice_input(duration=5, language='auto'):
     """
     Capture voice input from the microphone and convert to text.
-    
+
     Parameters:
     - duration: maximum recording time in seconds
     - language: 'auto' to detect language automatically, or pass language code (e.g., 'en', 'bn', 'hi')
-    
+
     Returns:
     - detected_text: string of recognized speech
     - detected_lang: detected language code
@@ -29,7 +30,7 @@ def process_voice_input(duration=5, language='auto'):
 
         # Recognize speech using Google's Speech Recognition
         detected_text = recognizer.recognize_google(audio)
-        
+
         # Language detection if set to auto
         if language == 'auto':
             detected_lang = detect(detected_text)
