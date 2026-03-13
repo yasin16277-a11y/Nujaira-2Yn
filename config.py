@@ -32,6 +32,12 @@ ROLEPLAY_MODE_ENABLED = True
 FANTASY_MODE_ENABLED = True
 PERSONA_MODES = ["default", "lucifer", "lilith", "kamukta", "fantasy", "roleplay", "mom"]
 
+# Security Settings
+RATE_LIMIT_REQUESTS = int(os.environ.get("RATE_LIMIT_REQUESTS", 30))  # Max requests per window
+RATE_LIMIT_WINDOW = int(os.environ.get("RATE_LIMIT_WINDOW", 60))  # Window in seconds
+MAX_INPUT_LENGTH = int(os.environ.get("MAX_INPUT_LENGTH", 5000))  # Max chars per message
+ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "").split(",") if os.environ.get("ALLOWED_ORIGINS") else []
+
 # Misc
 PORT = int(os.environ.get("PORT", 10000))
 HOST = '0.0.0.0'

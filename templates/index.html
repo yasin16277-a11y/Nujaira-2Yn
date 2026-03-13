@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 </head>
 <body>
 
@@ -159,15 +160,27 @@
         // ==============================
         // Utility: Simple markdown rendering
         // ==============================
+        const MAX_INPUT_LENGTH = 5000;
+
         function renderMarkdown(text) {
+            let html;
             if (typeof marked !== 'undefined') {
-                return marked.parse(text);
+                html = marked.parse(text);
+            } else {
+                html = text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`([^`]+)`/g, '<code>$1</code>')
+                    .replace(/\n/g, '<br>');
             }
-            return text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/`([^`]+)`/g, '<code>$1</code>')
-                .replace(/\n/g, '<br>');
+            if (typeof DOMPurify !== 'undefined') {
+                return DOMPurify.sanitize(html, {
+                    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'code', 'pre', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'a', 'span', 'div', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr'],
+                    ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+                    ALLOW_DATA_ATTR: false,
+                });
+            }
+            return html;
         }
 
         // ==============================
@@ -225,6 +238,11 @@
             const text = userInput.value.trim();
             if (!text || isProcessing) return;
 
+            if (text.length > MAX_INPUT_LENGTH) {
+                addMessage('ai', `Message too long. Please keep messages under ${MAX_INPUT_LENGTH} characters.`);
+                return;
+            }
+
             isProcessing = true;
             sendBtn.disabled = true;
             addMessage('user', text);
@@ -239,6 +257,13 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ command: text, mood: currentMood })
                 });
+                if (response.status === 429) {
+                    hideTyping();
+                    addMessage('ai', 'You are sending messages too quickly. Please wait a moment.');
+                    isProcessing = false;
+                    sendBtn.disabled = false;
+                    return;
+                }
                 const data = await response.json();
                 hideTyping();
                 addMessage('ai', data.response);
